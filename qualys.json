@@ -1,0 +1,111 @@
+{
+  "properties": {
+    "displayName": "Deploy Qualys - Test",
+    "policyType": "Custom",
+    "mode": "All",
+    "metadata": {
+      "createdBy": "b7212877-bd32-4ad4-879d-6bc342adc941",
+      "createdOn": "2022-01-17T22:56:55.1276068Z",
+      "updatedBy": "b7212877-bd32-4ad4-879d-6bc342adc941",
+      "updatedOn": "2022-01-18T06:03:14.1869456Z"
+    },
+    "parameters": {},
+    "policyRule": {
+      "if": {
+        "allOf": [
+          {
+            "field": "type",
+            "equals": "Microsoft.Compute/virtualMachines"
+          },
+          {
+            "field": "Microsoft.Compute/virtualMachines/provisioningState",
+            "equals": "Succeeded"
+          },
+          {
+            "field": "tags.orchestrator",
+            "exists": false
+          },
+          {
+            "field": "Microsoft.Compute/virtualMachines/storageProfile.imageReference.publisher",
+            "notMatch": "aks"
+          },
+          {
+            "field": "tags['qualys_agent']",
+            "notEquals": "disabled"
+          }
+        ]
+      },
+      "then": {
+        "effect": "deployIfNotExists",
+        "details": {
+          "type": "Microsoft.Compute/virtualMachines/extensions",
+          "roleDefinitionIds": [
+            "/providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c"
+          ],
+          "existenceCondition": {
+            "allOf": [
+              {
+                "field": "Microsoft.Compute/virtualMachines/extensions/type",
+                "in": [
+                  "WindowsAgent.AzureSecurityCenter",
+                  "LinuxAgent.AzureSecurityCenter"
+                ]
+              },
+              {
+                "field": "Microsoft.Compute/virtualMachines/extensions/publisher",
+                "equals": "Qualys"
+              },
+              {
+                "field": "Microsoft.Compute/virtualMachines/extensions/provisioningState",
+                "equals": "Succeeded"
+              }
+            ]
+          },
+          "deployment": {
+            "properties": {
+              "mode": "Incremental",
+              "template": {
+                "contentVersion": "1.0.0.0",
+                "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                "parameters": {
+                  "vmName": {
+                    "type": "string"
+                  },
+                  "apiVersionByEnv": {
+                    "type": "string"
+                  }
+                },
+                "resources": [
+                  {
+                    "type": "Microsoft.Compute/virtualMachines/providers/serverVulnerabilityAssessments",
+                    "name": "[concat(parameters('vmName'), '/Microsoft.Security/default')]",
+                    "apiVersion": "[parameters('apiVersionByEnv')]"
+                  }
+                ]
+              },
+              "parameters": {
+                "vmName": {
+                  "value": "[field('name')]"
+                },
+                "apiVersionByEnv": {
+                  "value": "2015-06-01-preview"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "id": "/subscriptions/72880e09-dbad-49ae-bffa-963d090bd311/providers/Microsoft.Authorization/policyDefinitions/57a4798e-812e-4d13-a92d-4074988a6145",
+  "type": "Microsoft.Authorization/policyDefinitions",
+  "name": "57a4798e-812e-4d13-a92d-4074988a6145",
+  "systemData": {
+    "createdBy": "adm_rafael.camison@lufthansagroup.onmicrosoft.com",
+    "createdByType": "User",
+    "createdAt": "2022-01-17T22:56:54.9557863Z",
+    "lastModifiedBy": "adm_rafael.camison@lufthansagroup.onmicrosoft.com",
+    "lastModifiedByType": "User",
+    "lastModifiedAt": "2022-01-18T06:03:14.1678525Z"
+  }
+}
